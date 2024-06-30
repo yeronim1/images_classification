@@ -14,28 +14,27 @@ classes = ['buildings', 'forest', 'glacier', 'mountain', 'sea', 'street']
 # Шлях до тестової директорії
 test_dir = './seg_test'
 
-# Генератор зображень для тестової вибірки
-test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1.0/255)
-
-test_generator = test_datagen.flow_from_directory(
+# Генератор зображень для тест сету
+test_generator = tf.keras.preprocessing.image.ImageDataGenerator().flow_from_directory(
     test_dir,
     target_size=(150, 150),
     batch_size=32,
     class_mode='categorical',
-    shuffle=False  # Дуже важливо, щоб не перемішувати дані для аналізу
+    shuffle=False,
+    rescale=1.0/255
 )
-
-# Генерація передбачень для тестового набору
-Y_pred = model.predict(test_generator, test_generator.samples // test_generator.batch_size + 1)
+# Предікт для тест сету
+Y_pred = model.predict(test_generator)
 y_pred = np.argmax(Y_pred, axis=1)
 
-# Отримання справжніх міток
+# Отримання target y
 y_true = test_generator.classes
 
-# Побудова конфузійної матриці
+# Створення confusion matrix
 cm = confusion_matrix(y_true, y_pred)
 cm_df = pd.DataFrame(cm, index=classes, columns=classes)
 
+# Плотимо
 plt.figure(figsize=(10, 8))
 sns.heatmap(cm_df, annot=True, fmt='g', cmap='Blues')
 plt.title('Confusion Matrix')
